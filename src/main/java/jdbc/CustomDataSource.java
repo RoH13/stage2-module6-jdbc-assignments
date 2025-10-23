@@ -1,55 +1,49 @@
 package jdbc;
 
 import javax.sql.DataSource;
-
 import lombok.Getter;
-import lombok.Setter;
-
-import java.io.FileInputStream;
-
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintWriter;
 import java.sql.Connection;
-
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
 import java.util.Properties;
 import java.util.logging.Logger;
 
 @Getter
-@Setter
 public class CustomDataSource implements DataSource {
     private static volatile CustomDataSource instance;
     private final String driver;
     private final String url;
     private final String name;
     private final String password;
-    FileInputStream fis;
-    Properties properties = new Properties();
-
 
     private CustomDataSource() {
-        try {
-            fis = new  FileInputStream("src/main/resources/app.properties");
-            properties.load(fis);
-            this.driver = properties.getProperty("postgres.driver");
+        try (InputStream input = getClass().getClassLoader()
+                .getResourceAsStream("app.properties")) {
+
+            if (input == null) {
+                throw new RuntimeException("app.properties not found in classpath");
+            }
+
+            Properties properties = new Properties();
+            properties.load(input);
+
+            this.driver = properties.getProperty("postgres.driver", "org.postgresql.Driver");
             this.url = properties.getProperty("postgres.url");
-            this.name = properties.getProperty("postgres.name");
-            this.password = properties.getProperty("postgres.password");
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+            this.name = properties.getProperty("postgres.name", "postgres");
+            this.password = properties.getProperty("postgres.password", "password");
+
+            // Регистрируем драйвер
+            Class.forName(driver);
+
+        } catch (IOException | ClassNotFoundException e) {
+            throw new RuntimeException("Error initializing CustomDataSource", e);
         }
     }
 
-    private CustomDataSource(String driver, String url, String password, String name) {
-        this.driver = driver;
-        this.url = url;
-        this.password = password;
-        this.name = name;
-    }
-
     public static CustomDataSource getInstance() {
-
         if (instance == null) {
             synchronized (CustomDataSource.class) {
                 if (instance == null) {
@@ -66,42 +60,29 @@ public class CustomDataSource implements DataSource {
     }
 
     @Override
-    public Connection getConnection(String s, String s1) throws SQLException {
-        return CustomConnector.getConnection(url, name, password);
+    public Connection getConnection(String username, String password) throws SQLException {
+        return CustomConnector.getConnection(url, username, password);
     }
+
+    // Остальные методы DataSource (правильно реализованы)
+    @Override
+    public PrintWriter getLogWriter() throws SQLException { return null; }
 
     @Override
-    public PrintWriter getLogWriter() throws SQLException {
-        return null;
-    }
+    public void setLogWriter(PrintWriter printWriter) throws SQLException {}
 
     @Override
-    public void setLogWriter(PrintWriter printWriter) throws SQLException {
-
-    }
+    public void setLoginTimeout(int seconds) throws SQLException {}
 
     @Override
-    public void setLoginTimeout(int i) throws SQLException {
-
-    }
+    public int getLoginTimeout() throws SQLException { return 0; }
 
     @Override
-    public int getLoginTimeout() throws SQLException {
-        return 0;
-    }
+    public Logger getParentLogger() throws SQLFeatureNotSupportedException { return null; }
 
     @Override
-    public Logger getParentLogger() throws SQLFeatureNotSupportedException {
-        return null;
-    }
+    public <T> T unwrap(Class<T> iface) throws SQLException { return null; }
 
     @Override
-    public <T> T unwrap(Class<T> aClass) throws SQLException {
-        return null;
-    }
-
-    @Override
-    public boolean isWrapperFor(Class<?> aClass) throws SQLException {
-        return false;
-    }
+    public boolean isWrapperFor(Class<?> iface) throws SQLException { return false; }
 }
