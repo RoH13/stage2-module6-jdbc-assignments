@@ -38,30 +38,27 @@ public class SimpleJDBCRepository {
 
 
     private static final String createUserSQL = "insert into myuser (id, firstname, lastname, age)\n" +
-            "values ((select max(id) from myuser) + 1, ?, ?, ?); select max(id) from myuser";
+            "values (?, ?, ?, ?);";
     private static final String updateUserSQL = "update myuser\n" +
-            "set firstname = ?, lastname = ?, age = ?\n" +
+            "set id = ?, firstname = ?, lastname = ?, age = ?\n" +
             "where id = ?";
     private static final String deleteUser = "DELETE FROM myuser WHERE id = ?";
     private static final String findUserByIdSQL = "SELECT * FROM myuser WHERE id = ?";
-    private static final String findUserByNameSQL = "SELECT * FROM myuser WHERE firstname = ?, lastname = ?";
+    private static final String findUserByNameSQL = "SELECT * FROM myuser WHERE firstname = ?;";
     private static final String findAllUserSQL = "SELECT * from myuser";
 
-    public Long createUser(String fn, String ln, int age) {
-        Long res = 0L;
+    public Long createUser(User user) {
         try {
             ps = connection.prepareStatement(createUserSQL);
-            ps.setString(1, fn);
-            ps.setString(2, ln);
-            ps.setInt(3, age);
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
-                res = rs.getLong("id");
-            }
+            ps.setLong(1, user.getId());
+            ps.setString(2, user.getFirstName());
+            ps.setString(3, user.getLastName());
+            ps.setInt(4, user.getAge());
+            ps.execute();
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
-        return res;
+        return user.getId();
     }
 
     public User findUserById(Long userId) {
@@ -84,17 +81,18 @@ public class SimpleJDBCRepository {
     }
 
     public User findUserByName(String userName) {
-        String[] n = userName.split(" ");
+
         User user = new User();
         try {
             ps = connection.prepareStatement(findUserByNameSQL);
-            ps.setString(1, n[0]);
-            ps.setString(2, n[1]);
+            ps.setString(1, userName);
+
             ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
+            while (rs.next()) {
                 Long id = rs.getLong("id");
+                String ln = rs.getString("lastname");
                 int age = rs.getInt("age");
-                user = new User(id, n[0], n[1], age);
+                user = new User(id, userName, ln, age);
             }
         } catch (SQLException e) {
             throw new RuntimeException(e);
@@ -123,20 +121,22 @@ public class SimpleJDBCRepository {
         return users;
     }
 
-    public User updateUser(Long userId, String fn, String ln, int age) {
+    public User updateUser(User user) {
         try {
             ps = connection.prepareStatement(updateUserSQL);
-            ps.setString(1, fn);
-            ps.setString(2, ln);
-            ps.setInt(3, age);
-            ps.setLong(4, userId);
+            ps.setLong(1, user.getId());
+            ps.setString(2, user.getFirstName());
+            ps.setString(3, user.getLastName());
+            ps.setInt(4, user.getAge());
+            ps.setLong(5, user.getId());
+            ps.execute();
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
-        return new User(userId, fn, ln, age);
+        return user;
     }
 
-     private void deleteUser(Long userId) {
+     public void deleteUser(Long userId) {
         try {
             ps = connection.prepareStatement(deleteUser);
             ps.setLong(1, userId);
