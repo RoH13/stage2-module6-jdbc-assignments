@@ -5,6 +5,9 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 
 public class CustomConnector {
+    private CustomConnector() {
+    }
+
     public static Connection getConnection(String url) throws SQLException {
         return DriverManager.getConnection(url);
     }

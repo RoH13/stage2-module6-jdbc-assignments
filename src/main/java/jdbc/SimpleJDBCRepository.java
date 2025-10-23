@@ -37,15 +37,15 @@ public class SimpleJDBCRepository {
 
 
 
-    private static final String createUserSQL = "insert into myuser (id, firstname, lastname, age)\n" +
+    private static final String createUserSQL = "insert into myusers (id, firstname, lastname, age)\n" +
             "values (?, ?, ?, ?);";
-    private static final String updateUserSQL = "update myuser\n" +
+    private static final String updateUserSQL = "update myusers\n" +
             "set id = ?, firstname = ?, lastname = ?, age = ?\n" +
             "where id = ?";
-    private static final String deleteUser = "DELETE FROM myuser WHERE id = ?";
-    private static final String findUserByIdSQL = "SELECT * FROM myuser WHERE id = ?";
-    private static final String findUserByNameSQL = "SELECT * FROM myuser WHERE firstname = ?;";
-    private static final String findAllUserSQL = "SELECT * from myuser";
+    private static final String deleteUser = "DELETE FROM myusers WHERE id = ?";
+    private static final String findUserByIdSQL = "SELECT * FROM myusers WHERE id = ?";
+    private static final String findUserByNameSQL = "SELECT * FROM myusers WHERE firstname = ?;";
+    private static final String findAllUserSQL = "SELECT * from myusers";
 
     public Long createUser(User user) {
         try {
