@@ -30,10 +30,10 @@ public class CustomDataSource implements DataSource {
             Properties properties = new Properties();
             properties.load(input);
 
-            this.driver = properties.getProperty("postgres.driver", "org.postgresql.Driver");
-            this.url = properties.getProperty("postgres.url");
-            this.name = properties.getProperty("postgres.name", "postgres");
-            this.password = properties.getProperty("postgres.password", "password");
+            this.driver = properties.getProperty("db.driver");
+            this.url = properties.getProperty("db.url");
+            this.name = properties.getProperty("db.name");
+            this.password = properties.getProperty("db.password");
 
             // Регистрируем драйвер
             Class.forName(driver);
